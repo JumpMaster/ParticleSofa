@@ -45,8 +45,10 @@ public class WebUtility
     {
         String stringUrl = getBaseURL();
 
-        String params = Integer.toString(seat) + ",";
-        stringUrl += "/pressButt";
+//        String params = Integer.toString(seat) + ",";
+        String params = Integer.toString(seat) + ",p,";
+//        stringUrl += "/pressButt";
+        stringUrl += "/moveManual";
         params += "up";
 
         postWebPage(stringUrl, params);
@@ -56,8 +58,10 @@ public class WebUtility
     {
         String stringUrl = getBaseURL();
 
-        String params = Integer.toString(seat) + ",";
-        stringUrl += "/pressButt";
+//        String params = Integer.toString(seat) + ",";
+        String params = Integer.toString(seat) + ",p,";
+//        stringUrl += "/pressButt";
+        stringUrl += "/moveManual";
         params += "down";
 
         postWebPage(stringUrl, params);
@@ -67,8 +71,10 @@ public class WebUtility
     {
         String stringUrl = getBaseURL();
 
-        String params = Integer.toString(seat) + ",";
-        stringUrl += "/releaseButt";
+//        String params = Integer.toString(seat) + ",";
+        String params = Integer.toString(seat) + ",r";
+//        stringUrl += "/releaseButt";
+        stringUrl += "/moveManual";
         postWebPage(stringUrl, params);
     }
 
