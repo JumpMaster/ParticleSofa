@@ -1,4 +1,5 @@
 #include "Button.h"
+#include "Settings.h"
 
 #ifndef Seat_h
 #define Seat_h
@@ -10,9 +11,12 @@ class Seat
 {
   public:
     // FUNCTIONS
+    void setSeatNumber(int number);
     void setButtonPins(int upButton, int downButton);
     void setRelayPins(int upRelay, int downRelay);
-    void setPositions(int feetUpPosition, int flatPosition);
+    void setMeasuringMode(bool enabled);
+    void loadPositions();
+    void savePosition(int address);
     bool run();
     void startMoving(int direction);
     void stopMoving();
@@ -26,16 +30,20 @@ class Seat
     void executeShortPress();
     void executeDoublePress();
     void moveToTarget(int targetPosition);
+    void setPositions(int feetUpPosition, int flatPosition);
     // VARIABLES
     Button _upButton;
     Button _downButton;
     int _upRelayPin;
     int _downRelayPin;
-    unsigned long _sofaOffTime;
-    unsigned long _sofaMoveStartTime;
-    int _sofaDirection;
-    int _sofaPosition;
+    unsigned long _seatOffTime;
+    unsigned long _seatMoveStartTime;
+    int _seatNumber;
+    int _seatDirection;
+    int _seatPosition;
     int _feetUpPosition;
     int _flatPosition;
+    bool _measuringMode;
+    Settings settings;
 };
 #endif

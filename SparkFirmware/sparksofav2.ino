@@ -9,6 +9,7 @@ Seat sofa[3];
 // OTHER DETAILS
 bool parentalMode;
 bool crazyMode;
+bool measuringMode;
 int modeValue = 0;
 unsigned long lastRequestTime =  0;
 bool sleepCriteriaMet = false;
@@ -133,29 +134,45 @@ void releaseButton(int seat)
 int setMode(String command)
 {
   if (command.indexOf("parental") >= 0)
-    toggleParentalMode();
+    return toggleParentalMode();
   else if (command.indexOf("crazy") >= 0)
-    toggleCrazyMode();
+    return toggleCrazyMode();
   else if (command.indexOf("restart") >= 0)
     System.reset();
   else if (command.indexOf("sleep") >= 0)
     lastRequestTime = millis() - sleepTime;
+  else if (command.indexOf("measuring") >= 0)
+    return toggleMeasuringMode();
+  else if (command.indexOf("measure") >= 0) // command example "1,flat,measure" == measure flat position on seat 0
+    return saveSeatPosition(command);
+  else
+    return -1;
 
-  return modeValue;
+  return 0;
 }
 
-void toggleParentalMode()
+bool toggleParentalMode()
 {
   parentalMode = !parentalMode;
   digitalWrite(switchRelayPin, parentalMode);
   updateModeValue();
+  return modeValue;
 }
 
-void toggleCrazyMode()
+bool toggleCrazyMode()
 {
   crazyMode = !crazyMode;
   setButtonPins();
   updateModeValue();
+  return modeValue;
+}
+
+bool toggleMeasuringMode()
+{
+  measuringMode != measuringMode;
+  for (int i = 0; i<3; i++)
+    sofa[i].setMeasuringMode(measuringMode);
+  return measuringMode;
 }
 
 void setButtonPins() {
@@ -190,6 +207,33 @@ int getCombinedSofaPositions() {
   return (sofa[0].getCurrentPosition() + sofa[1].getCurrentPosition() + sofa[2].getCurrentPosition());
 }
 
+int saveSeatPosition(String command)
+{
+  int seat = getSeatNumber(command);
+
+  if (seat < 0  || seat > 3)
+    return -1;
+
+  int address; // 0 = feet up, 2 == flat
+
+  if (command.substring(2,6).equals("feet"))
+    address = 0;
+  else if (command.substring(2,6).equals("flat"))
+    address = 2;
+  else
+    return -1;
+
+  if (seat == 0)
+  {
+    for (int i = 0; i < 3; i++)
+      sofa[i].savePosition(address);
+  }
+  else
+    sofa[seat-1].savePosition(address);
+
+  return 0;
+}
+
 void setup() {
   Spark.function("moveTo", moveTo);
   Spark.function("setMode", setMode);
@@ -197,15 +241,23 @@ void setup() {
 
   Spark.variable("getModeValue", &modeValue, INT);
 
+  for (int i = 0; i < 3; i++)
+    sofa[i].setSeatNumber(i+1);
+
   setButtonPins();
 
   sofa[0].setRelayPins(A0, A1);
   sofa[1].setRelayPins(A2, A3);
   sofa[2].setRelayPins(A4, A5);
 
-  sofa[0].setPositions(4900, 8000);
-  sofa[1].setPositions(4900, 8000);
-  sofa[2].setPositions(5300, 8300); // This sofa is slower then the other two
+  sofa[0].loadPositions();
+  sofa[1].loadPositions();
+  sofa[2].loadPositions();
+
+  delay(1000);
+  /*sofa[0].setPositions(4900, 8000);*/
+  /*sofa[1].setPositions(4900, 8000);*/
+  /*sofa[2].setPositions(5300, 8300); // This sofa is slower then the other two*/
 
   pinMode(switchRelayPin, OUTPUT);
   digitalWrite(switchRelayPin, parentalMode);
@@ -257,6 +309,4 @@ void loop() {
     sleepCriteriaMet = false;
     Spark.publish("LOG", "I'm awake!");
   }
-
-  delay(1);
 }
