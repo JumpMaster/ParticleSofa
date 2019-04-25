@@ -4,18 +4,28 @@
 #ifndef Seat_h
 #define Seat_h
 
-static const int UP = 1;
-static const int DOWN = 2;
+enum {
+  STOPPED,
+  UP,
+  DOWN
+};
+
+enum {
+  UPRIGHT,
+  FEETUP,
+  FLAT
+};
 
 class Seat
 {
   public:
     // FUNCTIONS
-    void setSeatNumber(int number);
-    void setButtonPins(int upButton, int downButton);
-    void setRelayPins(int upRelay, int downRelay);
+    Seat(int seatNumber, int upRelayPin, int downRelayPin, int upButtonPin, int downButtonPin, Seat *sofa, void (*callback)(int,int));
+    void (*callback)(int, int);
+    // void setSeatNumber(int number);
+    // void setButtonPins(int upButton, int downButton);
+    // void setRelayPins(int upRelay, int downRelay);
     void setMeasuringMode(bool enabled);
-    void loadPositions();
     void savePosition(int address);
     bool run();
     void startMoving(int direction);
@@ -23,15 +33,20 @@ class Seat
     void moveToUpright();
     void moveToFeet();
     void moveToFlat();
+    void moveUp();
+    void moveDown();
     int getCurrentPosition();
     bool isMoving();
   private:
     // FUNCTIONS
     void executeShortPress();
     void executeDoublePress();
+    void executeTripplePress();
     void moveToTarget(int targetPosition);
     void setPositions(int feetUpPosition, int flatPosition);
+    void loadPositions();
     // VARIABLES
+    Seat *_sofa;
     Button _upButton;
     Button _downButton;
     int _upRelayPin;

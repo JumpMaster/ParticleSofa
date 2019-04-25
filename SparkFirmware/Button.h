@@ -4,10 +4,11 @@
 #define Button_h
 
 static const int PRESSED = 1;
-static const int RELEASED = 2;
-static const int LONG_PRESS_RELEASED = 3;
-static const int SINGLECLICK = 4;
-static const int DOUBLECLICK = 5;
+// static const int RELEASED = 2;
+static const int LONG_PRESS_RELEASED = 2;
+static const int SINGLECLICK = 3;
+static const int DOUBLECLICK = 4;
+static const int TRIPPLECLICK = 5;
 
 class Button
 {
