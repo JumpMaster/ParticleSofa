@@ -1,7 +1,4 @@
 #include "Seat.h"
-#include "Button.h"
-#include "application.h"
-#include "Settings.h"
 
 const int moveBuffer = 250;
 

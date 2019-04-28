@@ -1,5 +1,4 @@
 #include "Settings.h"
-#include "application.h"
 
 //This function will write a 2 byte integer to the eeprom at the specified address and address + 1
 void Settings::writeInt(int p_address, int p_value)

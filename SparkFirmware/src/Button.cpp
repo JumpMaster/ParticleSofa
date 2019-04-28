@@ -1,5 +1,4 @@
 #include "Button.h"
-#include "application.h"
 
 // CONSTANTS
 const int longPressInterval = 300;

@@ -1,3 +1,4 @@
+#include "Particle.h"
 #include "Button.h"
 #include "Settings.h"
 
@@ -5,9 +6,9 @@
 #define Seat_h
 
 enum {
-  STOPPED,
-  UP,
-  DOWN
+  STOPPED = 0,
+  UP = 1,
+  DOWN = 2
 };
 
 enum {

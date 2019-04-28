@@ -1,6 +1,8 @@
 #ifndef Settings_h
 #define Settings_h
 
+#include "Particle.h"
+
 class Settings
 {
   public:

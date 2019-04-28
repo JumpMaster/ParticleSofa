@@ -1,7 +1,7 @@
 #ifndef __PUBLISHQUEUE_H__
 #define __PUBLISHQUEUE_H__
 
-#include "application.h"
+#include "Particle.h"
 #include <queue>
 
 #define canPublish() nextPublishTime < millis() && Particle.connected()
