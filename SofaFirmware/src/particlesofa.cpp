@@ -12,7 +12,7 @@ void seatCallback(int seat, int position);
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 
 const int switchRelayPin = A6; // A6 on photon D13 on Argon
-// const int switchRelayPin = D13; // A6 on photon D13 on Argon
+//const int switchRelayPin = D13; // A6 on photon D13 on Argon
 
 Seat sofa[3] {
     {1, D3, D2, A0, A1, sofa, seatCallback},
@@ -29,7 +29,13 @@ unsigned long lastRequestTime =  0;
 
 PublishQueue pq;
 
-PapertrailLogHandler papertrailHandler(papertrailAddress, papertrailPort, "Sofa");
+PapertrailLogHandler papertrailHandler(papertrailAddress, papertrailPort,
+  "Sofa", System.deviceID(),
+  LOG_LEVEL_NONE, {
+  { "app", LOG_LEVEL_ALL }
+  // TOO MUCH!!! { “system”, LOG_LEVEL_ALL },
+  // TOO MUCH!!! { “comm”, LOG_LEVEL_ALL }
+});
 
 MQTT mqttClient(mqttServer, 1883, mqttCallback);
 unsigned long lastMqttConnectAttempt;
@@ -46,22 +52,33 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     memcpy(p, payload, length);
     p[length] = '\0';
 
-    int seat = topic[15] - '0';
 
-    if (seat > 0 && seat <= 3) {
-        if (strcmp(p, "stop") == 0) {
-            sofa[seat-1].stopMoving();
-        } else if (strcmp(p, "up") == 0) {
-            sofa[seat-1].moveUp();
-        } else if (strcmp(p, "down") == 0) {
-            sofa[seat-1].moveDown();
-        } else if (strcmp(p, "upright") == 0) {
-            sofa[seat-1].moveToUpright();
-        } else if (strcmp(p, "feetup") == 0) {
-            sofa[seat-1].moveToFeet();
-        } else if (strcmp(p, "flat") == 0) {
-            sofa[seat-1].moveToFlat();
-        }
+    if (strstr(topic, "home/sofa/seat") != NULL) {
+      int seat = topic[15] - '0';
+
+      if (seat > 0 && seat <= 3) {
+          if (strcmp(p, "stop") == 0) {
+              sofa[seat-1].stopMoving();
+          } else if (strcmp(p, "up") == 0) {
+              sofa[seat-1].moveUp();
+          } else if (strcmp(p, "down") == 0) {
+              sofa[seat-1].moveDown();
+          } else if (strcmp(p, "upright") == 0) {
+              sofa[seat-1].moveToUpright();
+          } else if (strcmp(p, "feetup") == 0) {
+              sofa[seat-1].moveToFeet();
+          } else if (strcmp(p, "flat") == 0) {
+              sofa[seat-1].moveToFlat();
+          }
+      }
+    } else if (strstr(topic, "home/sofa/parental_mode/set") != NULL) {
+      if (strcmp(p, "enabled") == 0) {
+        parentalMode = true;
+      } else {
+        parentalMode = false;
+      }
+      mqttClient.publish("home/sofa/parental_mode", parentalMode ? "enabled" : "disabled", true);
+      digitalWrite(switchRelayPin, parentalMode);
     }
 }
 
@@ -82,6 +99,7 @@ void connectToMQTT() {
         mqttConnectionAttempts = 0;
         Log.info("MQTT Connected");
         mqttClient.subscribe("home/sofa/seat/+/set");
+        mqttClient.subscribe("home/sofa/parental_mode/set");
     } else {
         mqttConnectionAttempts++;
         Log.info("MQTT failed to connect");
@@ -200,6 +218,7 @@ int saveSeatPosition(String command) {
   return 0;
 }
 
+/*
 void updateModeValue() {
   modeValue = parentalMode;
 }
@@ -210,6 +229,7 @@ bool toggleParentalMode() {
   updateModeValue();
   return modeValue;
 }
+*/
 
 bool toggleMeasuringMode() {
   measuringMode = !measuringMode;
@@ -219,9 +239,9 @@ bool toggleMeasuringMode() {
 }
 
 int setMode(const char *command) {
-  if (strcmp(command, "parentalMode") == 0) {
+  /*(if (strcmp(command, "parentalMode") == 0) {
     return toggleParentalMode();
-  } else if (strcmp(command, "restart") == 0) {
+  } else*/ if (strcmp(command, "restart") == 0) {
     System.reset();
   } else if (strcmp(command, "measuring") == 0) {
     return toggleMeasuringMode();
