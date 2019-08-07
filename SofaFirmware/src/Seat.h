@@ -17,8 +17,7 @@ enum {
   FLAT
 };
 
-class Seat
-{
+class Seat {
   public:
     // FUNCTIONS
     Seat(int seatNumber, int upRelayPin, int downRelayPin, int upButtonPin, int downButtonPin, Seat *sofa, void (*callback)(int,int));

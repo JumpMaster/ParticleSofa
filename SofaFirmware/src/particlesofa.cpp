@@ -18,7 +18,7 @@ Seat sofa[3] {
     {1, D3, D2, A0, A1, sofa, seatCallback},
     {2, D5, D4, A2, A3, sofa, seatCallback},
     {3, D7, D6, A4, A5, sofa, seatCallback}
-    };
+};
 
 // OTHER DETAILS
 bool parentalMode;
@@ -146,10 +146,9 @@ int moveTo(const char *data) {// Example input == "0,upright"
     if (seat == 0) {
       for (int i = 0; i < 3; i++)
         sofa[i].moveToUpright();
-    }
-    else
+    } else {
       sofa[seat-1].moveToUpright();
-
+    }
     return 0;
   } else if (strcmp(action, "feetup") == 0) {
     if (seat == 0) {
@@ -171,7 +170,7 @@ int moveTo(const char *data) {// Example input == "0,upright"
   return -1;
 }
 
-int moveManual(const char *data) {// Example input == "0,p,down" == on all seats press the down button
+int moveManual(const char *data) { // Example input == "0,p,down" == on all seats press the down button
   int length = strlen(data)+1;
   char command[length];
   memcpy(command, data, length);
@@ -218,19 +217,6 @@ int saveSeatPosition(String command) {
   return 0;
 }
 
-/*
-void updateModeValue() {
-  modeValue = parentalMode;
-}
-
-bool toggleParentalMode() {
-  parentalMode = !parentalMode;
-  digitalWrite(switchRelayPin, parentalMode);
-  updateModeValue();
-  return modeValue;
-}
-*/
-
 bool toggleMeasuringMode() {
   measuringMode = !measuringMode;
   for (int i = 0; i<3; i++)
@@ -239,9 +225,7 @@ bool toggleMeasuringMode() {
 }
 
 int setMode(const char *command) {
-  /*(if (strcmp(command, "parentalMode") == 0) {
-    return toggleParentalMode();
-  } else*/ if (strcmp(command, "restart") == 0) {
+  if (strcmp(command, "restart") == 0) {
     System.reset();
   } else if (strcmp(command, "measuring") == 0) {
     return toggleMeasuringMode();
@@ -258,7 +242,7 @@ int getCombinedSofaPositions() {
 }
 
 void random_seed_from_cloud(unsigned seed) {
-   srand(seed);
+  srand(seed);
 }
 
 SYSTEM_THREAD(ENABLED);
@@ -289,10 +273,10 @@ void loop() {
     sofa[i].loop();
 
   if (mqttClient.isConnected()) {
-      mqttClient.loop();
+    mqttClient.loop();
   } else if ((mqttConnectionAttempts < 5 && millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout1)) ||
               millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout2)) {
-      connectToMQTT();
+    connectToMQTT();
   }
     
   pq.process();
