@@ -23,12 +23,9 @@ class Seat
     // FUNCTIONS
     Seat(int seatNumber, int upRelayPin, int downRelayPin, int upButtonPin, int downButtonPin, Seat *sofa, void (*callback)(int,int));
     void (*callback)(int, int);
-    // void setSeatNumber(int number);
-    // void setButtonPins(int upButton, int downButton);
-    // void setRelayPins(int upRelay, int downRelay);
     void setMeasuringMode(bool enabled);
     void savePosition(int address);
-    bool run();
+    void loop();
     void startMoving(int direction);
     void stopMoving();
     void moveToUpright();
@@ -46,6 +43,7 @@ class Seat
     void moveToTarget(int targetPosition);
     void setPositions(int feetUpPosition, int flatPosition);
     void loadPositions();
+    void reportPosition();
     // VARIABLES
     Seat *_sofa;
     Button _upButton;
@@ -57,6 +55,7 @@ class Seat
     int _seatNumber;
     int _seatDirection;
     int _seatPosition;
+    int _seatPositionPct;
     int _feetUpPosition;
     int _flatPosition;
     bool _measuringMode;

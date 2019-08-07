@@ -19,27 +19,6 @@ Seat::Seat(int seatNumber, int upButtonPin, int downButtonPin, int upRelayPin, i
     loadPositions();
 }
 
-/*
-void Seat::setSeatNumber(int number)
-{
-  _seatNumber = number;
-}
-
-void Seat::setButtonPins(int downPin, int upPin)
-{
-  _downButton.setPin(downPin);
-  _upButton.setPin(upPin);
-}
-
-void Seat::setRelayPins(int upRelayPin, int downRelayPin)
-{
-  _upRelayPin = upRelayPin;
-  _downRelayPin = downRelayPin;
-  pinMode(_upRelayPin, OUTPUT);
-  pinMode(_downRelayPin, OUTPUT);
-}
-*/
-
 void Seat::setMeasuringMode(bool enabled)
 {
   _measuringMode = enabled;
@@ -77,18 +56,27 @@ void Seat::setPositions(int feetUpPosition, int flatPosition)
   _flatPosition = flatPosition;
 }
 
-bool Seat::run() { // return value == "Did you do any work?"
+void Seat::loop() { // return value == "Did you do any work?"
 
     unsigned long currentMillis = millis();
 
-    if (_seatOffTime > 0 && currentMillis >= _seatOffTime)
+    if (isMoving()) {
+      if (_seatOffTime > 0 && currentMillis >= _seatOffTime) {
         stopMoving();
+      } else {
+        _seatPosition = getCurrentPosition();
+        reportPosition();
+      }
+    }
 
     int upState = _upButton.checkState();
     int downState = _downButton.checkState();
     
+    //
+    // If the buttons haven't been pressed our work here is done
+    //
     if (upState == 0 && downState == 0)
-        return false;
+        return;// false;
     
     if (upState == PRESSED) {
         if (_seatDirection == STOPPED)
@@ -108,9 +96,6 @@ bool Seat::run() { // return value == "Did you do any work?"
         executeTripplePress();
     else if (downState == LONG_PRESS_RELEASED || upState == LONG_PRESS_RELEASED)// if (downState == LONG_PRESS_RELEASED || upState == LONG_PRESS_RELEASED)
         stopMoving();
-    else
-        return false;
-    return true;
 }
 
 void Seat::startMoving(int direction) {
@@ -128,6 +113,21 @@ void Seat::startMoving(int direction) {
   _seatMoveStartTime = millis();
 }
 
+void Seat::reportPosition() {
+  int position;
+  
+  if (_seatPosition < (_feetUpPosition+40)) {
+      position = ((100*_seatPosition + _feetUpPosition/2)/_feetUpPosition)/2;
+  } else {
+      position = 50+((100*(_seatPosition-_feetUpPosition)) + ((_flatPosition-_feetUpPosition)/2))/(_flatPosition-_feetUpPosition)/2;
+  }
+
+  if (_seatPositionPct != position) {
+    _seatPositionPct = position;
+    callback(_seatNumber, _seatPositionPct);
+  }
+}
+
 void Seat::stopMoving() {
   if (_seatDirection == UP)
     digitalWrite(_upRelayPin, LOW);
@@ -137,17 +137,6 @@ void Seat::stopMoving() {
   _seatPosition = getCurrentPosition();
   _seatDirection = STOPPED;
   _seatOffTime = 0;
-  
-  
-  int position;
-  
-  if (_seatPosition < (_feetUpPosition+40)) {
-      position = round(((float) _seatPosition / _feetUpPosition)*5)*10;
-  } else {
-      position = (round(((float) (_seatPosition-_feetUpPosition) / (_flatPosition-_feetUpPosition))*5)*10)+50;
-  }
-  
-  callback(_seatNumber, position);
 }
 
 int Seat::getCurrentPosition() {

@@ -286,14 +286,14 @@ void setup() {
 void loop() {
 
   for (int i = 0; i < 3; i++)
-    sofa[i].run();
+    sofa[i].loop();
 
-    if (mqttClient.isConnected()) {
-        mqttClient.loop();
-    } else if ((mqttConnectionAttempts < 5 && millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout1)) ||
-               millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout2)) {
-        connectToMQTT();
-    }
+  if (mqttClient.isConnected()) {
+      mqttClient.loop();
+  } else if ((mqttConnectionAttempts < 5 && millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout1)) ||
+              millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout2)) {
+      connectToMQTT();
+  }
     
   pq.process();
   wd.checkin(); // resets the AWDT count
