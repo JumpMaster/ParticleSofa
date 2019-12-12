@@ -261,6 +261,8 @@ void setup() {
   Particle.variable("getModeValue", modeValue);
   Particle.variable("resetTime", resetTime);
 
+  Particle.publishVitals(900);
+
   pinMode(switchRelayPin, OUTPUT);
   digitalWrite(switchRelayPin, parentalMode);
 
