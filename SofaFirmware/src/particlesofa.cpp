@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "publishqueue.h"
 #include "ArduinoJson.h"
+#include "DiagnosticsHelperRK.h"
 #include "secrets.h"  // Contains variables such as API keys which should not be public
 
 // Stubs
@@ -24,8 +25,11 @@ Seat sofa[3] {
 bool parentalMode;
 bool measuringMode;
 int modeValue = 0;
-unsigned long resetTime = 0;
 unsigned long lastRequestTime =  0;
+
+uint32_t resetTime = 0;
+retained uint32_t lastHardResetTime;
+retained int resetCount;
 
 PublishQueue pq;
 
@@ -103,6 +107,24 @@ void connectToMQTT() {
     } else {
         mqttConnectionAttempts++;
         Log.info("MQTT failed to connect");
+    }
+}
+
+uint32_t nextMetricsUpdate = 0;
+void sendTelegrafMetrics() {
+    if (millis() > nextMetricsUpdate) {
+        nextMetricsUpdate = millis() + 30000;
+
+        char buffer[150];
+        snprintf(buffer, sizeof(buffer),
+            "status,device=Sofa uptime=%d,resetReason=%d,firmware=\"%s\",memTotal=%ld,memFree=%ld",
+            System.uptime(),
+            System.resetReason(),
+            System.version().c_str(),
+            DiagnosticsHelper::getValue(DIAG_ID_SYSTEM_TOTAL_RAM),
+            DiagnosticsHelper::getValue(DIAG_ID_SYSTEM_USED_RAM)
+            );
+        mqttClient.publish("telegraf/particle", buffer);
     }
 }
 
@@ -245,15 +267,41 @@ void random_seed_from_cloud(unsigned seed) {
   srand(seed);
 }
 
-SYSTEM_THREAD(ENABLED);
+SYSTEM_THREAD(ENABLED)
 
-STARTUP(WiFi.selectAntenna(ANT_EXTERNAL)); // selects the u.FL antenna
+void startupMacro() {
+    WiFi.selectAntenna(ANT_EXTERNAL);
+    System.enableFeature(FEATURE_RESET_INFO);
+    System.enableFeature(FEATURE_RETAINED_MEMORY);
+}
+STARTUP(startupMacro());
 
 void setup() {
-  do {
-    resetTime = Time.now();
-    delay(10);
-  } while (resetTime < 1000000 && millis() < 20000);
+    waitFor(Particle.connected, 30000);
+    
+    do {
+        resetTime = Time.now();
+        Particle.process();
+    } while (resetTime < 1500000000 || millis() < 10000);
+    
+    if (System.resetReason() == RESET_REASON_PANIC) {
+        if ((Time.now() - lastHardResetTime) < 120) {
+            resetCount++;
+        } else {
+            resetCount = 1;
+        }
+
+        lastHardResetTime = Time.now();
+
+        if (resetCount > 3) {
+            System.enterSafeMode();
+        }
+    } else if (System.resetReason() == RESET_REASON_WATCHDOG) {
+      Log.info("RESET BY WATCHDOG");
+    } else {
+        resetCount = 0;
+    }
+
 
   Particle.function("moveTo", moveTo);
   Particle.function("setMode", setMode);
@@ -276,6 +324,7 @@ void loop() {
 
   if (mqttClient.isConnected()) {
     mqttClient.loop();
+    sendTelegrafMetrics();
   } else if ((mqttConnectionAttempts < 5 && millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout1)) ||
               millis() > (lastMqttConnectAttempt + mqttConnectAtemptTimeout2)) {
     connectToMQTT();
